@@ -1,0 +1,74 @@
+---
+title: "team NaiveBayes"
+output: html_document
+Team members:
+Meijuan Zeng
+Qingying Zhou
+Juye Wang
+Mandy Li
+Lena Zhitong Lei
+
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(tidyr)
+library(caret)
+install.packages("naivebayes")
+library("naivebayes")
+
+# step 1 read data
+D1<- read.csv("studentVle.csv")
+D2<- read.csv("studentAssessment.csv")
+D3<- read.csv("studentInfo.csv")
+
+# step 2 construct feature data
+avg_click<-D1 %>%group_by(id_student) %>% summarise(mean_click= mean(sum_click))
+avg_score<-D2 %>%group_by(id_student) %>% summarise(mean_score= mean(score))
+D4<- left_join(D3, avg_click)
+D5<-left_join(D4,avg_score)
+
+#create a validation set
+#there are four kinds of labels, pass, fail, withdrawn, distinction; 1,0,2,1,
+#convert final_result variable to binary; remove students who withdrew and convert distinctions to pass
+D5$final_result<-ifelse(D5$final_result=="Pass"|D5$final_result=="Distinction", 1, ifelse( D5$final_result=="Fail", 0, 2))
+D6<-filter(D5, final_result!=2)
+
+#check the pattern of NA in D5
+library(mice)
+md.pattern(D6)
+#now we know that there are NAs in mean_click and mean_score
+sum(is.na(D6$mean_click))
+sum(is.na(D6$mean_click)&(D6$final_result=1))
+#compare these 2 numbers (both of them are 336). This result reveals that mean_click being NA is not determing the final result, so we can remove all observations with mean_click=NA
+D7<-filter(D6, !is.na(D6$mean_click))
+
+#we do the same for mean_score;only to find that there are 2 kinds of results(pass or fail) with mean_score being NA, so we impute 0
+sum(is.na(D7$mean_score))
+sum(is.na(D7$mean_score)&(D5$final_result=1))
+D7$mean_score[is.na(D7$mean_score)]<-0
+
+#divide into training and test data
+trainData<-createDataPartition(D7$final_result, p=0.75, list=FALSE)
+
+training <-D7[trainData,]
+testing <-D7[-trainData,]
+
+
+```
+```{r}
+#start training
+library(naivebayes)
+training$final_result<-factor(training$final_result, levels = c(1,0))
+ctrl<-trainControl(method="cv", number = 10)
+fit1<-naive_bayes(final_result~., training)
+
+#predict with testing data
+testing$final_result<-factor(testing$final_result, levels = c(1,0))
+pred1<- predict(fit1, testing)
+confusionMatrix(testing$final_result, pred1)
+
+#As a result, we get an accuracy of 0.78;
+#we'll probably get a better result if we can examine more the correlation between variable and the final_result. But given a relative small amount of variables and a pretty good accuracy now, this process may be not necessary at this stage.
+```
+
