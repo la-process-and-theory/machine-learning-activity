@@ -1,0 +1,65 @@
+---
+title: "Prediction"
+author: "Leonardo Restrepo"
+date: "2/5/2020"
+output: html_document
+---
+
+```{r}
+
+vle = read.csv("~/tmp/prediction-activity/studentVle.csv")
+assessment = read.csv("~/tmp/prediction-activity/studentAssessment.csv")
+info = read.csv("~/tmp/prediction-activity/studentInfo.csv")
+
+library(dplyr)
+library(tidyr)
+
+sum(vle[which(vle$id_student==504429, arr.ind = FALSE),3])
+
+
+vle2 = vle %>%
+  select(id_student, sum_click)%>%
+  group_by(id_student)%>%
+  summarise(clicks = sum(sum_click))
+
+assessment2 = assessment %>%
+  select(id_student, score) %>%
+  group_by(id_student) %>%
+  summarise(avg_score = mean(score))
+
+
+info2 = merge(vle2, info, by = "id_student")
+info2 = merge(assessment2, info2, by = "id_student")
+
+info3 = info2 %>%
+  filter(final_result != "Withdrawn")%>%
+  filter(final_result != "Distinction")
+
+info3$final_result = as.character(info3$final_result)
+
+info3$final_result = factor(info3$final_result)
+
+set.seed(672)   # OH SHIT, HE SET THE SEED LIKE A BOSS
+
+ind = sample(1:nrow(info2), size = round(.25*nrow(info2)), replace = FALSE)
+
+TEST = info3[ind,]
+TRAINING = info3[-c(ind),]
+
+
+TRAINING2 = na.omit(TRAINING)
+
+plot(y=TRAINING2$avg_score, x=log(TRAINING2$clicks))
+
+install.packages("caret")
+
+control <- caret::trainControl(method="cv", number=10)
+
+fit <- caret::train(final_result~., data=TRAINING2, method="rpart", metric="accuracy", trControl=control)
+
+install.packages("rpart")
+library(rpart)
+
+rpart.plot(fit$finalModel)
+
+```
