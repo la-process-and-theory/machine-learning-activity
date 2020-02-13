@@ -1,0 +1,96 @@
+---
+title: "prediction-activity"
+author: "Charles Lang"
+date: "2/11/2020"
+output: html_document
+---
+Wrangling
+Calculate the average daily number of clicks (site interactions) for each student from the studentVle dataset
+```{r}
+```
+
+```{r}
+library(tidyr)
+library(lsa)
+library(dplyr)
+avg <- select(studentVle, "id_student", "date", "sum_click");
+avg <- arrange(avg, id_student)
+```
+
+```{r}
+daily_N <- aggregate(avg[, 3], list(avg$id_student), mean)
+```
+Calculate the average assessment score for each student from the studentAssessment dataset
+```{r}
+ass <- select(studentAssessment, "id_student", "score");
+ass <- arrange(ass, id_student)
+avg_assess <- aggregate(ass[, 2], list(ass$id_student), mean)
+```
+Merge your click and assessment score average values into the the studentInfo dataset
+```{r}
+names(daily_N)[1] <- "id"
+m1 <- merge(studentInfo, daily_N, by.x="id_student", by.y = "id")
+names(avg_assess)[1] <- "id"
+m1 <- merge(m1, avg_assess, by.x="id_student", by.y = "id")
+```
+Create a Validation Set
+Split your data into two new datasets, TRAINING and TEST, by randomly selecting 25% of the students for the TEST set
+```{r}
+library(caret) 
+trainData <- createDataPartition(
+  y = data$thing,
+  p = .75,
+  list = FALSE)
+
+
+
+```
+Explore
+Generate summary statistics for the variable final_result
+```{r}
+```
+Ensure that the final_result variable is binary (Remove all students who withdrew from a courses and convert all students who recieved distinctions to pass)
+```{r}
+```
+Visualize the distributions of each of the variables for insight
+```{r}
+```
+Visualize relationships between variables for insight
+```{r}
+```
+Model Training
+```{r}
+```
+Install the caret package
+```{r}
+```
+You will be allocated one of the following models to test:
+
+CART (RPART), Conditional Inference Trees (party), Naive Bayes (naivebayes), Logistic Regression (gpls)
+```{r}
+```
+Using the trainControl command in the caret package create a 10-fold cross-validation harness:
+control <- trainControl(method="cv", number=10)
+```{r}
+```
+Using the standard caret syntax fit your model and measure accuracy:
+fit <- train(final_result~., data=TRAINING, method=YOUR MODEL, metric="accuracy", trControl=control)
+```{r}
+```
+Generate a summary of your results and create a visualization of the accuracy scores for your ten trials
+```{r}
+```
+Make any tweaks to your model to try to improve its performance
+```{r}
+```
+Model Testing
+Use the predict function to test your model
+predictions <- predict(fit, TEST)
+Generate a confusion matrix for your model test
+confusionMatrix(predictions, TEST$final_result)
+
+```{r}
+
+```
+
+
