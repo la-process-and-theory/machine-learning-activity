@@ -1,0 +1,27 @@
+---
+title: "prediction"
+output: html_document
+---
+
+```{r}
+library (dplyr)
+library(tidyr)
+#import dataset
+D1<- read.csv("vle.csv")
+D2<- read.csv("assessments.csv")
+D3<- read.csv("studentVle.csv")
+
+#Calculate the average daily number of clicks (site interactions) for each student from the `studentVle` dataset
+daily<-aggregate(D3$date,list(D3$id_student), mean)
+colnames(daily)<-c("id_student","average_daily_click")
+daily$average_daily_click<-round(daily$average_daily_click,2)
+
+#Calculate the average assessment score for each student from the `studentAssessment` dataset
+D2
+```
+
+
+
+
+
+
