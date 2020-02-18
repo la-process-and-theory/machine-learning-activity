@@ -1,0 +1,45 @@
+---
+title: "prediction"
+output: html_document
+---
+
+```{r}
+library (dplyr)
+library(tidyr)
+#import dataset
+D1<- read.csv("studentInfo.csv")
+D2<- read.csv("studentAssessment.csv")
+D3<- read.csv("studentVle.csv")
+
+#Calculate the average daily number of clicks (site interactions) for each student from the `studentVle` dataset
+daily_click<-aggregate(D3$date,list(D3$id_student), mean)
+colnames(daily_click)<-c("id_student","average_daily_click")
+daily_click$average_daily_click<-round(daily$average_daily_click,2)
+
+#Calculate the average assessment score for each student from the `studentAssessment` dataset
+daily_score<-aggregate(D2$score,list(D2$id_student), mean)
+colnames(daily_score)<-c("id_student","average_daily_score")
+daily_score$average_daily_score<-round(daily_score$average_daily_score,2)
+
+# Merge your click and assessment score average values into the the `studentInfo` dataset
+D1<- merge(D1,daily_click,by="id_student")
+D1<- merge(D1,daily_score,by="id_student")
+```
+
+```{r}
+#Split your data into two new datasets, `TRAINING` and `TEST`, by **randomly** selecting 25% of the students for the `TEST` set
+number<- sample(1:nrow(D1), size = round(.25*nrow(D1)), replace = FALSE)
+TEST = D1[number,]
+TRAINING = D1[-number,]
+```
+
+```{r}
+# Generate summary statistics for the variable `final_result`
+TRAINING <- na.omit(TRAINING)
+Final_result_summary<-count(TRAINING,final_result)
+```
+
+
+
+
+
