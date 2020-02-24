@@ -1,0 +1,90 @@
+---
+title: "prediction.rmd"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading student files for prediction activity
+
+``` {r}
+library(tidyverse)
+info_df <- read_csv("../Resources/studentInfo.csv")
+head(info_df, 3)
+```
+
+``` {r}
+assessment_df <- read_csv("../Resources/studentAssessment.csv")
+head(assessment_df, 3)
+```
+
+``` {r}
+vle_df <- read_csv("../Resources/studentVle.csv")
+head(vle_df,3)
+```
+
+### Wrangling
+* Calculate the average daily number of clicks (site interactions) for each student from the `studentVle` dataset
+* Calculate the average assessment score for each student from the `studentAssessment` dataset
+* Merge your click and assessment score average values into the the `studentInfo` dataset
+
+``` {r}
+info_df
+```
+
+``` {r}
+studentgrouped_vle <- vle_df %>% group_by(id_student)
+vle_merge <- summarize(studentgrouped_vle, avg_click=round(mean(sum_click)))
+head(vle_merge,3)
+```
+
+
+``` {r}
+studentgrouped_assess <- assessment_df %>% group_by(id_student)
+assess_merge <- summarize(studentgrouped_assess, avg_score=round(mean(score)))
+head(assess_merge, 3)
+```
+
+``` {r}
+
+merge_df <- merge(vle_merge,assess_merge,by="id_student",all=TRUE)
+merge_df
+```
+
+``` {r}
+allmerge_df <- merge(info_df, merge_df, by="id_student", all=TRUE)
+allmerge_df
+```
+
+### Create a Validation Set
+* Split your data into two new datasets, `TRAINING` and `TEST`, by **randomly** selecting 25% of the students for the `TEST` set
+sample_n(allmerge_df, (length(allmerge_df)*.75))
+
+``` {r}
+n <- nrow(allmerge_df)
+trainIndex <- sample(1:n, size = round(0.75*n), replace=FALSE)
+train <- allmerge_df[trainIndex ,]
+test <- allmerge_df[-trainIndex ,]
+```
+
+### Explore
+* Generate summary statistics for the variable `final_result`
+* Ensure that the final_result variable is binary (Remove all students who withdrew from a courses and convert all students who recieved distinctions to pass)
+* Visualize the distributions of each of the variables for insight
+* Visualize relationships between variables for insight
+
+``` {r}
+filtered_result <- filter(allmerge_df, final_result != "Withdrawn")
+filtered_result <- filtered_result %>% mutate_if(is.character, str_replace_all, pattern = 'Distinction', replacement = 'Pass')
+pass_fail <- filtered_result %>% group_by(final_result)
+summarize(pass_fail, n())
+```
+
+``` {r}
+
+```
+
+
+
