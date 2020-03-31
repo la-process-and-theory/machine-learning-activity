@@ -1,8 +1,8 @@
 ---
 title: "Prediction-Activity_JUNG"
 author: "SuwonJung"
-date: "2/11/2020"
-output: html_document
+date: "2/11/2020" 
+output: html_document 
 ---
 
 # Prediction Activity
