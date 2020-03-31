@@ -5,8 +5,6 @@ date: "2/11/2020"
 output: html_document
 ---
 
-
-
 # Prediction Activity
 
 A mini-prediction competition. Who can produce the best model to predict pass/fail
