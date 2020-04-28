@@ -1,0 +1,131 @@
+---
+title: "Prediction-Activity_JUNG"
+author: "SuwonJung"
+date: "2/11/2020" 
+output: html_document 
+---
+
+# Prediction Activity
+
+A mini-prediction competition. Who can produce the best model to predict pass/fail
+
+### Download
+* Download the Open University Learning Analytics dataset from [here](https://analyse.kmi.open.ac.uk/open_dataset)
+* Import the `studentVle.csv`, `studentAssessment.csv` and `studentInfo.csv` files into R
+
+```{r}
+
+studentVle <- read.csv("studentVle.csv")
+studentAssessment <- read.csv("studentAssessment.csv")
+studentInfo <- read.csv("studentInfo.csv")
+
+```
+
+### Wrangling
+* Calculate the average daily number of clicks (site interactions) for each student from the `studentVle` dataset
+```{r}
+
+library(tidyr)
+library(dplyr)
+
+V<- group_by(studentVle, id_student)
+V1<- summarise(vle, avg = mean(sum_click))
+V1
+#get column names
+colnames(V1)
+# Rename column where names is ""
+names(V1)[names(V1) == "id_student"] <- "student ID"
+names(V1)[names(V1) == "avg"] <- "avg clicks"
+V1
+
+```
+
+* Calculate the average assessment score for each student from the `studentAssessment` dataset
+```{r}
+
+A <- group_by(studentAssessment, id_student)
+A1 <- summarise(assessment, avg = mean(score))
+A1
+#get column names
+colnames(A1)
+# Rename column where names is ""
+names(A1)[names(A1) == "id_student"] <- "student ID"
+names(A1)[names(A1) == "avg"] <- "avg scores"
+A1
+
+```
+* Merge your click and assessment score average values into the the `studentInfo` dataset
+```{r}
+
+#Join data. Retain all values, all rows.
+VA <- full_join(V1, A1, by="student ID")
+
+```
+### Create a Validation Set
+* Split your data into two new datasets, `TRAINING` and `TEST`, by **randomly** selecting 25% of the students for the `TEST` set
+```{r}
+
+#install.packages("caret")
+library(caret)
+
+set.seed(3456)
+
+trainData <- createDataPartition(
+  VA$`student ID`, ## the outcome data are needed
+  p = .75, ## The percentage of data in the training set
+  list = FALSE) #avoids returning the data as a list 
+  #gives you 26099*0.75 observations 
+
+#Generates a list of index numbers for the sample
+training <- VA[ trainData,]
+testing  <-VA[-trainData,]
+
+summary(training)
+summary(testing)
+```
+### Explore
+* Generate summary statistics for the variable `final_result`
+```{r}
+
+I <- data.frame(studentInfo$id_student, studentInfo$final_result)
+colnames(I)
+# Rename column where names is ""
+names(I)[names(I) == "studentInfo.id_student"] <- "studentID"
+names(I)[names(I) == "studentInfo.final_result"] <- "finalResult"
+summary(I$finalResult)
+
+```
+* Ensure that the final_result variable is binary (Remove all students who withdrew from a courses and convert all students who recieved distinctions to pass)
+```{r}
+
+finalResult
+
+
+
+
+```
+* Visualize the distributions of each of the variables for insight
+* Visualize relationships between variables for insight
+
+### Model Training
+* Install the `caret` package
+* You will be allocated one of the following models to test:
+```{r}
+
+
+
+```
+
+  CART (`RPART`), Conditional Inference Trees (`party`), Naive Bayes (`naivebayes`), Logistic Regression (`gpls`)
+
+* Using the `trainControl` command in the `caret` package create a 10-fold cross-validation harness:   
+  `control <- trainControl(method="cv", number=10)`
+* Using the standard caret syntax fit your model and measure accuracy:  
+   `fit <- train(final_result~., data=TRAINING, method=YOUR MODEL, metric="accuracy", trControl=control)`
+* Generate a summary of your results and create a visualization of the accuracy scores for your ten trials
+* Make any tweaks to your model to try to improve its performance
+### Model Testing
+* Use the `predict` function to test your model  
+  `predictions <- predict(fit, TEST)`
+* Generate a confusion matrix for your model test  
+  `confusionMatrix(predictions, TEST$final_result)`
